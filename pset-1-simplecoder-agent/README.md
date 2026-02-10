@@ -23,6 +23,12 @@ You need to implement:
 - Manage user permissions for file read/write access, etc. (must support a session-level persistence option)
 - The main agent logic
 
+## Installation
+
+```bash
+pip install -e .
+```
+
 ### Set API Key
 
 ```bash
@@ -49,3 +55,5 @@ simplecoder --interactive
 # Options
 simplecoder --help
 ```
+
+I used claude to debug, and i used openAI API key
