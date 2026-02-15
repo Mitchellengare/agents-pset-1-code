@@ -14,12 +14,7 @@ import litellm
 
 
 class RAGSystem:
-    """
-    RAG system for semantic code search using AST-based chunking.
-    
-    Instead of naively chunking code by lines, we use Python's AST to extract
-    semantic units (functions, classes, methods) for more meaningful retrieval.
-    """
+    # Indexes Python definitions (functions/classes) and retrieves the closest matches for a query.
     
     def __init__(
         self,
@@ -36,9 +31,7 @@ class RAGSystem:
         self.embeddings: np.ndarray | None = None
     
     def index_codebase(self) -> None:
-        """
-        Index all Python files in the codebase using AST-based chunking.
-        """
+        # Walk the repo, extract chunks from .py files, then embed them.
         # Find all Python files
         pattern = str(self.base_dir / self.index_pattern)
         python_files = glob.glob(pattern, recursive=True)
@@ -56,12 +49,8 @@ class RAGSystem:
             self._generate_embeddings()
     
     def _index_file(self, filepath: str) -> None:
-        """
-        Index a single Python file using AST.
+        # Index a single Python file using AST.
         
-        Args:
-            filepath: Path to the Python file
-        """
         with open(filepath, 'r', encoding='utf-8') as f:
             code = f.read()
         
@@ -98,9 +87,8 @@ class RAGSystem:
                     })
     
     def _generate_embeddings(self) -> None:
-        """
-        Generate embeddings for all code chunks.
-        """
+        # Generate embeddings for all code chunks.
+        
         # Prepare texts for embedding
         texts = []
         for chunk in self.chunks:
@@ -134,16 +122,8 @@ class RAGSystem:
         self.embeddings = np.array(all_embeddings)
     
     def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
-        """
-        Search for code chunks semantically similar to the query.
+        # Search for code chunks semantically similar to the query.
         
-        Args:
-            query: Search query
-            top_k: Number of results to return
-            
-        Returns:
-            List of matching code chunks with similarity scores
-        """
         if not self.chunks or self.embeddings is None:
             return []
         
@@ -176,12 +156,8 @@ class RAGSystem:
         return results
     
     def get_stats(self) -> dict[str, Any]:
-        """
-        Get statistics about the indexed codebase.
+        # Get statistics about the indexed codebase.
         
-        Returns:
-            Dictionary with indexing statistics
-        """
         if not self.chunks:
             return {
                 "total_chunks": 0,

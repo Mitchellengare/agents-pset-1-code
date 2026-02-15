@@ -1,10 +1,10 @@
-"""
-SimpleCoder Agent - Main ReAct loop implementation.
 
-This module implements the core agent logic using a ReAct (Reasoning + Acting) loop.
-The agent alternates between reasoning about what to do next and executing tool calls
-until the task is complete.
+""" Agent - Main ReAct loop implementation.
+
+ This module implements the core agent logic using a ReAct (Reasoning + Acting) loop.
+ The agent alternates between reasoning about what to do next and executing tool calls until the task is complete.
 """
+
 
 import json
 import os
@@ -25,9 +25,7 @@ console = Console()
 
 
 class Agent:
-    """
-    ReAct-style coding agent with tool use, RAG, context management, and planning.
-    """
+    #calls and executes
     
     def __init__(
         self,
@@ -67,31 +65,32 @@ class Agent:
         self.system_prompt = self._build_system_prompt()
     
     def _build_system_prompt(self) -> str:
-        """Build the system prompt with tool descriptions."""
+        # Build the system prompt with tool descriptions
         tools_desc = "\n".join([
             f"- {tool['name']}: {tool['description']}"
             for tool in self.tools
         ])
         
-        prompt = f"""You are SimpleCoder, a helpful coding assistant. You help users write code, navigate codebases, and complete software engineering tasks.
+        prompt = f"""You are SimpleCoder, a coding assistant.
 
-You have access to the following tools:
+Available tools:
 {tools_desc}
 
-To use a tool, output a JSON object with this format:
+If you want to call a tool, output a JSON object with this format:
 {{"tool": "tool_name", "args": {{"arg1": "value1", "arg2": "value2"}}}}
 
 After using a tool, you'll see the result and can decide what to do next.
 
-When the task is complete, respond with your final answer without using any tools.
+After a tool runs, you'll get its result and can continue.
 
-Always think step-by-step about what you need to do."""
+When you're done, return a normal response (no tool JSON).
+"""
         
         if self.use_planning:
-            prompt += "\n\nYou have task planning capabilities. Break down complex tasks into subtasks."
+            prompt += "\nYou may draft a short plan for multi-step tasks."
         
         if self.use_rag:
-            prompt += "\n\nYou have semantic code search capabilities. Use search_code to find relevant code in the codebase."
+            prompt += "\nYou may use search_code to locate relevant files/snippets."
         
         return prompt
     

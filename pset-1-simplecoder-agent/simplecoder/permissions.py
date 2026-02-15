@@ -20,15 +20,7 @@ PermissionType = Literal["read", "write", "execute"]
 
 
 class PermissionManager:
-    """
-    Manages user permissions for file operations.
-    
-    Supports:
-    - Session-level permissions (persistent across tasks)
-    - Task-level permissions (cleared after each task)
-    - Interactive permission prompts
-    - Permission storage/loading
-    """
+    """Stores and checks user-approved paths for file operations."""
     
     def __init__(self, storage_path: str = ".simplecoder_permissions.json"):
         self.storage_path = Path.home() / storage_path
@@ -40,7 +32,7 @@ class PermissionManager:
             "execute": set()
         }
         
-        # Task permissions (temporary)
+        # Temporary permissions cleared between tasks
         self.task_permissions: dict[str, set[str]] = {
             "read": set(),
             "write": set(),
@@ -57,15 +49,12 @@ class PermissionManager:
         interactive: bool = True
     ) -> bool:
         """
-        Check if permission is granted for an operation on a path.
-        
-        Args:
-            permission_type: Type of permission (read, write, execute)
-            path: File or directory path
-            interactive: If True, prompt user if permission not found
-            
-        Returns:
-            True if permission granted, False otherwise
+        Return True if the given action is allowed for the given path.
+
+        If the exact path isn't allowed, we also honor permissions granted to any
+        parent directory (e.g., allowing "./src" implies "./src/app.py" is allowed).
+
+        If interactive is False, this never prompts and simply denies.
         """
         # Normalize path
         normalized_path = str(Path(path).resolve())
@@ -83,14 +72,11 @@ class PermissionManager:
     
     def _has_permission(self, permission_type: PermissionType, path: str) -> bool:
         """
-        Check if permission exists in session or task permissions.
-        
-        Args:
-            permission_type: Type of permission
-            path: Normalized path
-            
-        Returns:
-            True if permission exists
+        Internal check against both permission sets.
+
+        Matching rules:
+        exact path match
+        parent directory match
         """
         # Check exact match
         if path in self.session_permissions[permission_type]:
@@ -111,14 +97,11 @@ class PermissionManager:
     
     def _prompt_permission(self, permission_type: PermissionType, path: str) -> bool:
         """
-        Prompt user for permission.
-        
-        Args:
-            permission_type: Type of permission
-            path: Path requiring permission
-            
-        Returns:
-            True if user grants permission
+        Ask the user before allowing a new path.
+
+        We keep the prompt simple:
+        grant or deny
+        if granted, decide whether it should persist
         """
         console.print(f"\n[yellow]Permission Request[/yellow]")
         console.print(f"Action: [bold]{permission_type}[/bold]")
@@ -152,14 +135,8 @@ class PermissionManager:
         path: str,
         session_level: bool = False
     ) -> None:
-        """
-        Programmatically grant a permission.
         
-        Args:
-            permission_type: Type of permission
-            path: Path to grant permission for
-            session_level: If True, make it session-level
-        """
+        # Grant a permission without prompting
         normalized_path = str(Path(path).resolve())
         
         if session_level:
@@ -173,13 +150,7 @@ class PermissionManager:
         permission_type: PermissionType,
         path: str
     ) -> None:
-        """
-        Revoke a permission.
-        
-        Args:
-            permission_type: Type of permission
-            path: Path to revoke permission for
-        """
+        # Remove a previously granted permission
         normalized_path = str(Path(path).resolve())
         
         self.session_permissions[permission_type].discard(normalized_path)
@@ -187,7 +158,7 @@ class PermissionManager:
         self._save_session_permissions()
     
     def clear_task_permissions(self) -> None:
-        """Clear all task-level permissions."""
+        # Clear all task-level permissions.
         self.task_permissions = {
             "read": set(),
             "write": set(),
@@ -195,7 +166,7 @@ class PermissionManager:
         }
     
     def clear_session_permissions(self) -> None:
-        """Clear all session-level permissions."""
+        # Clear all session-level permissions.
         self.session_permissions = {
             "read": set(),
             "write": set(),
@@ -204,7 +175,7 @@ class PermissionManager:
         self._save_session_permissions()
     
     def _save_session_permissions(self) -> None:
-        """Save session permissions to disk."""
+        # Save session permissions to disk.
         try:
             data = {
                 ptype: list(paths)
@@ -218,7 +189,7 @@ class PermissionManager:
             console.print(f"[yellow]Warning: Could not save permissions: {e}[/yellow]")
     
     def _load_session_permissions(self) -> None:
-        """Load session permissions from disk."""
+        # Load session permissions from disk.
         if not self.storage_path.exists():
             return
         
@@ -235,12 +206,7 @@ class PermissionManager:
             console.print(f"[yellow]Warning: Could not load permissions: {e}[/yellow]")
     
     def get_permissions_summary(self) -> str:
-        """
-        Get a summary of current permissions.
-        
-        Returns:
-            Formatted summary string
-        """
+        # Get a summary of current permissions.
         summary = "**Current Permissions:**\n\n"
         
         for ptype in ["read", "write", "execute"]:

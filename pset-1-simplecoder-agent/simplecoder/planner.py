@@ -10,12 +10,7 @@ from typing import Any
 
 
 class TaskPlanner:
-    """
-    Task planner for breaking down complex tasks into subtasks.
-    
-    Uses an LLM to analyze tasks and create structured plans with subtasks.
-    Tracks completion of subtasks to provide progress feedback.
-    """
+    # Generates a subtask list for a request and tracks what we’ve checked off.
     
     def __init__(self, model: str = "gemini/gemini-2.0-flash-exp"):
         self.model = model
@@ -23,34 +18,26 @@ class TaskPlanner:
         self.completed_subtasks: list[str] = []
     
     def create_plan(self, task: str) -> str:
-        """
-        Create a task plan with subtasks.
-        
-        Args:
-            task: The main task description
-            
-        Returns:
-            Formatted plan as a string
-        """
+        # Create a task plan with subtasks.
+
         planning_prompt = f"""You are a task planning assistant. Break down the following task into clear, actionable subtasks.
 
 Task: {task}
 
-Provide a structured plan with:
-1. A brief analysis of what needs to be done
-2. A numbered list of subtasks in order
-3. For each subtask, indicate what files/actions are needed
+Return:
+- a brief note on what needs doing
+- a numbered list of subtasks, in order
+- any files/actions you expect for each step
 
-Format your response as:
+Use this format:
+
 **Analysis:**
-[Your analysis]
-
-**Subtasks:**
-1. [First subtask]
-2. [Second subtask]
 ...
 
-Keep it concise and actionable."""
+**Subtasks:**
+1. ...
+2. ...
+"""
         
         try:
             response = litellm.completion(
@@ -74,15 +61,8 @@ Keep it concise and actionable."""
             return f"Error creating plan: {str(e)}"
     
     def _extract_subtasks(self, plan_text: str) -> list[str]:
-        """
-        Extract subtasks from plan text.
+        # Extract subtasks from plan text.
         
-        Args:
-            plan_text: The formatted plan
-            
-        Returns:
-            List of subtask descriptions
-        """
         subtasks = []
         lines = plan_text.split('\n')
         
@@ -104,21 +84,13 @@ Keep it concise and actionable."""
         return subtasks
     
     def mark_subtask_complete(self, subtask_description: str) -> None:
-        """
-        Mark a subtask as complete.
+        # Mark a subtask as complete.
         
-        Args:
-            subtask_description: Description of completed subtask
-        """
         self.completed_subtasks.append(subtask_description)
     
     def get_progress(self) -> str:
-        """
-        Get current progress on the task plan.
+        # Get current progress on the task plan.
         
-        Returns:
-            Progress summary as a string
-        """
         if not self.current_plan:
             return "No active plan"
         
@@ -136,18 +108,14 @@ Keep it concise and actionable."""
         return progress
     
     def is_complete(self) -> bool:
-        """
-        Check if all subtasks are complete.
+        # Check if all subtasks are complete.
         
-        Returns:
-            True if all subtasks are done, False otherwise
-        """
         if not self.current_plan:
             return False
         
         return len(self.completed_subtasks) >= len(self.current_plan["subtasks"])
     
     def reset(self) -> None:
-        """Reset the planner state."""
+        # Reset the planner state.
         self.current_plan = None
         self.completed_subtasks = []

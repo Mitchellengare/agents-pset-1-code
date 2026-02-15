@@ -11,12 +11,10 @@ from typing import Any
 
 
 def get_tools() -> list[dict[str, Any]]:
-    """
-    Get the list of available tools with their schemas.
+    # Get the list of available tools with their schemas.
     
-    Returns:
-        List of tool definitions
-    """
+    # Returns: List of tool definitions
+
     return [
         {
             "name": "list_files",
@@ -67,18 +65,8 @@ def execute_tool(
     rag_system: Any = None,
     permission_manager: Any = None
 ) -> str:
-    """
-    Execute a tool by name with given arguments.
+    # Execute a tool by name with given arguments.
     
-    Args:
-        tool_name: Name of the tool to execute
-        args: Arguments for the tool
-        rag_system: RAG system instance (for search_code)
-        permission_manager: Permission manager instance
-        
-    Returns:
-        Tool execution result as a string
-    """
     if tool_name == "list_files":
         return list_files(**args)
     elif tool_name == "read_file":
@@ -96,16 +84,8 @@ def execute_tool(
 
 
 def list_files(directory: str = ".", pattern: str = "*") -> str:
-    """
-    List files in a directory with optional pattern matching.
+    # List files in a directory with optional pattern matching.
     
-    Args:
-        directory: Directory to list (default: current directory)
-        pattern: Glob pattern for filtering (default: all files)
-        
-    Returns:
-        List of files as a formatted string
-    """
     try:
         path = Path(directory).resolve()
         
@@ -139,15 +119,8 @@ def list_files(directory: str = ".", pattern: str = "*") -> str:
 
 
 def read_file(filepath: str) -> str:
-    """
-    Read the contents of a file.
+    # Read the contents of a file.
     
-    Args:
-        filepath: Path to the file to read
-        
-    Returns:
-        File contents or error message
-    """
     try:
         path = Path(filepath).resolve()
         
@@ -169,17 +142,8 @@ def read_file(filepath: str) -> str:
 
 
 def search_code(rag_system: Any, query: str, top_k: int = 5) -> str:
-    """
-    Search for code using semantic similarity.
+    # Search for code using semantic similarity.
     
-    Args:
-        rag_system: RAG system instance
-        query: Search query
-        top_k: Number of results to return
-        
-    Returns:
-        Search results as formatted string
-    """
     try:
         results = rag_system.search(query, top_k=top_k)
         
@@ -207,16 +171,8 @@ def search_code(rag_system: Any, query: str, top_k: int = 5) -> str:
 
 
 def write_file(filepath: str, content: str) -> str:
-    """
-    Write content to a file (creates or overwrites).
+    # Write content to a file (creates or overwrites).
     
-    Args:
-        filepath: Path to the file
-        content: Content to write
-        
-    Returns:
-        Success or error message
-    """
     try:
         path = Path(filepath).resolve()
         
@@ -233,17 +189,8 @@ def write_file(filepath: str, content: str) -> str:
 
 
 def edit_file(filepath: str, old_content: str, new_content: str) -> str:
-    """
-    Edit a file by replacing old content with new content.
+    # Edit a file by replacing old content with new content.
     
-    Args:
-        filepath: Path to the file
-        old_content: Content to replace
-        new_content: New content
-        
-    Returns:
-        Success or error message
-    """
     try:
         path = Path(filepath).resolve()
         

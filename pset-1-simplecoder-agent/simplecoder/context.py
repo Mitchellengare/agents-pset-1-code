@@ -10,12 +10,7 @@ from typing import Any
 
 
 class ContextManager:
-    """
-    Manages conversation context with automatic summarization.
-    
-    When the context approaches the token limit, older messages are summarized
-    to keep the conversation within bounds while preserving recent context.
-    """
+    """Stores messages and trims history by summarizing when it gets too large."""
     
     def __init__(
         self,
@@ -36,16 +31,12 @@ class ContextManager:
         self.keep_recent = keep_recent
         
         self.messages: list[dict[str, str]] = []
-        self.current_tokens = 0
+        self.current_tokens = 0 # rough estimate, not exact
         self.summary: str | None = None
     
     def add_message(self, role: str, content: str) -> None:
         """
-        Add a message to the context.
-        
-        Args:
-            role: Message role (system, user, assistant)
-            content: Message content
+        Add a message and update the token estimate.
         """
         message = {"role": role, "content": content}
         self.messages.append(message)
@@ -88,9 +79,7 @@ class ContextManager:
         return result
     
     def _compact_context(self) -> None:
-        """
-        Compact the context by summarizing older messages.
-        """
+        # Compact the context by summarizing older messages.
         if len(self.messages) <= self.keep_recent + 1:  # +1 for system message
             return
         
@@ -169,12 +158,7 @@ Combined summary (max 500 words):"""
             self.current_tokens = sum(len(msg["content"]) // 4 for msg in self.messages)
     
     def get_token_usage(self) -> dict[str, int]:
-        """
-        Get current token usage statistics.
-        
-        Returns:
-            Dictionary with token usage info
-        """
+        """Quick stats for logging/debugging."""
         return {
             "current_tokens": self.current_tokens,
             "max_tokens": self.max_tokens,
