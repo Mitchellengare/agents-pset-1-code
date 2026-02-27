@@ -18,7 +18,6 @@ from tinker_utils.log import setup_logging
 from tinker_utils.renderers import get_renderer, Message
 
 
-
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARN)
 
@@ -77,7 +76,8 @@ def main(config: Config):
     
     # Initialize tokenizer and renderer
     logger.info(f"Loading tokenizer for {config.model_name}")
-    tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+    token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+    tokenizer = AutoTokenizer.from_pretrained(config.model_name, token=token)
     renderer = get_renderer("qwen3_instruct", tokenizer)
     
     # Initialize Tinker client
@@ -98,8 +98,9 @@ def main(config: Config):
         model_seq_id=0,
         model_id=model_id,
     )
+    sampling_session_id = os.path.basename(config.log_path)
     sampling_client = tinker.SamplingClient(
-        holder=holder,
+        holder,
         model_id=model_id,
 )
     
