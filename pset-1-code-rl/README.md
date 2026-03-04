@@ -58,5 +58,3 @@ def train_step(
 
 We recommend making good use of `asyncio.gather()`, e.g. to sample multiple results simultaneously. Look at the documentation for Tinker's `async` APIs.
 
-
-tml-rdiiEb0DPDzocPUciqayd7R1gdW29zQ2jAxakdHlgIfIcug74faIwb2jy6dKmHaNDAAAA

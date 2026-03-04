@@ -6,6 +6,7 @@ from tinker_utils.renderers import (
     RenderedMessage,
     Tokenizer,
     Message,
+    UnparsedToolCall,
     remove_thinking,
     parse_response_for_stop_token,
     parse_content_blocks,
@@ -173,8 +174,6 @@ class Qwen3Renderer(Renderer):
             assistant_message["content"] = parts
 
             # Also populate tool_calls and unparsed_tool_calls fields for backward compatibility
-            # TODO: Consider moving away from TypedDicts for part types - current approach
-            # relies on runtime type checking (p["type"] == "tool_call") without static guarantees.
             tool_calls = [p["tool_call"] for p in parts if p["type"] == "tool_call"]
             if tool_calls:
                 assistant_message["tool_calls"] = tool_calls
