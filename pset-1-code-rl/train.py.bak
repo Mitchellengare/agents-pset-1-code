@@ -350,12 +350,10 @@ async def run_training_step(
         temperature=config.temperature,
     )
 
-    logger.info(f"Starting gather_samples for {len(prompts)} prompts x {config.group_size} samples...")
     loop = asyncio.get_event_loop()
     all_samples = await gather_samples(
         loop, sampling_client, prompts, sampling_params, config.group_size
     )
-    logger.info(f"gather_samples done. Starting env.step for {len(prompts)} groups...")
 
     all_datums: list[tinker.types.Datum] = []
     metrics: dict = {
@@ -367,12 +365,10 @@ async def run_training_step(
         "num_samples": 0,
     }
 
-    for i, (prompt, env, group_samples) in enumerate(zip(prompts, envs, all_samples)):
-        logger.info(f"Running env.step for group {i+1}/{len(prompts)}...")
+    for prompt, env, group_samples in zip(prompts, envs, all_samples):
         # env.step takes Action = list[int] (raw completion token ids)
         reward_tasks = [env.step(sample.tokens) for sample in group_samples]
         step_results = await asyncio.gather(*reward_tasks)
-        logger.info(f"Group {i+1} done, rewards: {[r.reward for r in step_results]}")
 
         rewards = [r.reward for r in step_results]
         advantages = compute_advantages(rewards)
@@ -528,48 +524,40 @@ def make_datum(
     """
     Construct a Tinker Datum for importance-sampling (GRPO) training.
 
-    The server requires target_tokens, logprobs, and advantages to all have
-    the same length as the full input sequence (prompt + completion).
-    Prompt positions use dummy values (0 tokens, 0.0 logprob, 0.0 advantage)
-    since the loss is only applied to the completion portion.
+    model_input   : full token sequence (prompt + completion)
+    loss_fn_inputs:
+      "target_tokens" : completion token ids       (int64,   [comp_len])
+      "logprobs"      : behaviour policy log-probs (float32, [comp_len])
+      "advantages"    : scalar advantage broadcast (float32, [comp_len])
+
+    The server identifies the prompt prefix via the length difference between
+    model_input and target_tokens and masks loss on prompt tokens accordingly.
     """
-    full_tokens = prompt_tokens + completion_tokens
-    total_len = len(full_tokens)
-    prompt_len = len(prompt_tokens)
     comp_len = len(completion_tokens)
 
-    # Align logprobs to completion length
+    # Align logprobs length to completion length
     if len(logprobs) >= comp_len:
         comp_logprobs = list(logprobs[:comp_len])
     else:
         comp_logprobs = list(logprobs) + [0.0] * (comp_len - len(logprobs))
 
-    # Pad with prompt-length prefix of dummy values
-    all_target_tokens = [0] * prompt_len + completion_tokens
-    all_logprobs      = [0.0] * prompt_len + comp_logprobs
-    all_advantages    = [0.0] * prompt_len + [advantage] * comp_len
-
-    assert len(all_target_tokens) == total_len
-    assert len(all_logprobs) == total_len
-    assert len(all_advantages) == total_len
-
     return tinker.types.Datum(
-        model_input=tinker.ModelInput.from_ints(full_tokens),
+        model_input=tinker.ModelInput.from_ints(prompt_tokens + completion_tokens),
         loss_fn_inputs={
             "target_tokens": tinker.types.TensorData(
-                data=all_target_tokens,
+                data=completion_tokens,
                 dtype="int64",
-                shape=[total_len],
+                shape=[comp_len],
             ),
             "logprobs": tinker.types.TensorData(
-                data=all_logprobs,
+                data=comp_logprobs,
                 dtype="float32",
-                shape=[total_len],
+                shape=[comp_len],
             ),
             "advantages": tinker.types.TensorData(
-                data=all_advantages,
+                data=[advantage] * comp_len,
                 dtype="float32",
-                shape=[total_len],
+                shape=[comp_len],
             ),
         },
     )
