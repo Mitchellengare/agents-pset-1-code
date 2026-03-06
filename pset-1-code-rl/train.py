@@ -45,10 +45,7 @@ class Config:
     resume: bool = False
 
 
-# ---------------------------------------------------------------------------
 # Sampling helpers
-# ---------------------------------------------------------------------------
-
 def _sample_sync(
     sampling_client: tinker.SamplingClient,
     prompt: tinker.ModelInput,
@@ -101,10 +98,7 @@ async def gather_samples(
     return all_samples
 
 
-# ---------------------------------------------------------------------------
 # Main
-# ---------------------------------------------------------------------------
-
 def main(config: Config):
     check_log_dir(config.log_path, "resume" if config.resume else "ask")
     ml_logger = setup_logging(
@@ -185,9 +179,8 @@ def main(config: Config):
         beta2=0.999,
     )
 
-    # ------------------------------------------------------------------
+  
     # Training loop
-    # ------------------------------------------------------------------
     logger.info("Starting training loop...")
     step = start_step
     total_steps = (
@@ -296,11 +289,7 @@ def main(config: Config):
     ml_logger.close()
     logger.info("Training complete!")
 
-
-# ---------------------------------------------------------------------------
 # Training step
-# ---------------------------------------------------------------------------
-
 async def run_training_step(
     training_client: tinker.TrainingClient,
     sampling_client: tinker.SamplingClient,
@@ -419,9 +408,8 @@ async def run_training_step(
         )
 
 
-# ---------------------------------------------------------------------------
 # Evaluation
-# ---------------------------------------------------------------------------
+
 
 async def run_evaluation(
     sampling_client: tinker.SamplingClient,
@@ -501,9 +489,7 @@ async def run_evaluation(
     logger.info(f"Eval metrics at step {step}: {eval_metrics}")
 
 
-# ---------------------------------------------------------------------------
 # Helper functions
-# ---------------------------------------------------------------------------
 
 def should_skip(advantages: list[float]) -> bool:
     """Return True if all advantages are essentially zero (degenerate group)."""
