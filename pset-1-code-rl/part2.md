@@ -224,88 +224,106 @@ An alternative is to simply give zero reward when extraction fails.
 
 ------------------------------------------------------------------------
 
-# Problem 18: Policy Gradient
+## Problem 18: Policy Gradient
 
 We want to show:
 
 $$
-\nabla_\theta \mathbb{E}_{y \sim \pi_\theta(\cdot | P)}[R(y)]
+\nabla_\theta \mathbb{E}_{y \sim \pi_\theta(\cdot \mid P)}[R(y)]
 =
-\mathbb{E}
-\left[
+\mathbb{E}\left[
 R(y)
 \sum_{t=1}^{T}
 \nabla_\theta
-\log
-\pi_\theta(y_t | P, y_{<t})
+\log \pi_\theta(y_t \mid P, y_{<t})
 \right]
 $$
 
-Starting from the expectation:
+### Starting from the expectation
 
 $$
 \nabla_\theta \mathbb{E}[R(y)]
 =
 \nabla_\theta
 \sum_y
-\pi_\theta(y|P)R(y)
+\pi_\theta(y \mid P) R(y)
 $$
 
 $$
 =
 \sum_y
 R(y)
-\nabla_\theta \pi_\theta(y|P)
+\nabla_\theta \pi_\theta(y \mid P)
 $$
 
-Using the log-derivative trick:
+### Using the log-derivative trick
 
 $$
-\nabla_\theta \pi_\theta(y|P)
+\nabla_\theta \pi_\theta(y \mid P)
 =
-\pi_\theta(y|P)
-\nabla_\theta \log \pi_\theta(y|P)
+\pi_\theta(y \mid P)
+\nabla_\theta
+\log \pi_\theta(y \mid P)
 $$
 
-Substitute:
+Substituting this into the previous expression:
 
 $$
 =
 \sum_y
 R(y)
-\pi_\theta(y|P)
+\pi_\theta(y \mid P)
 \nabla_\theta
-\log \pi_\theta(y|P)
+\log \pi_\theta(y \mid P)
 $$
 
 $$
 =
-\mathbb{E}
-\left[
+\mathbb{E}\left[
 R(y)
 \nabla_\theta
-\log \pi_\theta(y|P)
+\log \pi_\theta(y \mid P)
 \right]
 $$
 
-Since generation is autoregressive:
+### Autoregressive factorization
+
+Because the model generates tokens sequentially,
 
 $$
-\log \pi_\theta(y|P)
+\log \pi_\theta(y \mid P)
 =
 \sum_{t=1}^{T}
-\log \pi_\theta(y_t | P, y_{<t})
+\log
+\pi_\theta(y_t \mid P, y_{<t})
 $$
 
-Therefore:
+Taking the gradient gives
 
 $$
-\nabla_\theta \log \pi_\theta(y|P)
+\nabla_\theta \log \pi_\theta(y \mid P)
 =
 \sum_{t=1}^{T}
 \nabla_\theta
 \log
-\pi_\theta(y_t | P, y_{<t})
+\pi_\theta(y_t \mid P, y_{<t})
+$$
+
+### Final result
+
+Substituting this back yields
+
+$$
+\nabla_\theta \mathbb{E}_{y \sim \pi_\theta}[R(y)]
+=
+\mathbb{E}
+\left[
+R(y)
+\sum_{t=1}^{T}
+\nabla_\theta
+\log
+\pi_\theta(y_t \mid P, y_{<t})
+\right]
 $$
 
 which gives the final result.
