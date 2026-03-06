@@ -229,8 +229,9 @@ An alternative is to simply give zero reward when extraction fails.
 We want to show:
 
 $$
-\nabla_\theta E[R(y)] =
-E
+\nabla_\theta \mathbb{E}_{y \sim \pi_\theta(\cdot | P)}[R(y)]
+=
+\mathbb{E}
 \left[
 R(y)
 \sum_{t=1}^{T}
@@ -243,7 +244,8 @@ $$
 Starting from the expectation:
 
 $$
-\nabla_\theta E[R(y)] =
+\nabla_\theta \mathbb{E}[R(y)]
+=
 \nabla_\theta
 \sum_y
 \pi_\theta(y|P)R(y)
@@ -259,29 +261,51 @@ $$
 Using the log-derivative trick:
 
 $$
-\nabla_\theta \pi_\theta =
-\pi_\theta \nabla_\theta \log \pi_\theta
+\nabla_\theta \pi_\theta(y|P)
+=
+\pi_\theta(y|P)
+\nabla_\theta \log \pi_\theta(y|P)
 $$
+
+Substitute:
 
 $$
 =
 \sum_y
 R(y)
 \pi_\theta(y|P)
-\nabla_\theta \log \pi_\theta(y|P)
+\nabla_\theta
+\log \pi_\theta(y|P)
 $$
 
 $$
 =
-E[R(y)\nabla_\theta\log\pi_\theta(y|P)]
+\mathbb{E}
+\left[
+R(y)
+\nabla_\theta
+\log \pi_\theta(y|P)
+\right]
 $$
 
-Since generation is autoregressive,
+Since generation is autoregressive:
 
 $$
-\log \pi_\theta(y|P)=
-\sum_t
-\log \pi_\theta(y_t|P,y_{<t})
+\log \pi_\theta(y|P)
+=
+\sum_{t=1}^{T}
+\log \pi_\theta(y_t | P, y_{<t})
+$$
+
+Therefore:
+
+$$
+\nabla_\theta \log \pi_\theta(y|P)
+=
+\sum_{t=1}^{T}
+\nabla_\theta
+\log
+\pi_\theta(y_t | P, y_{<t})
 $$
 
 which gives the final result.
