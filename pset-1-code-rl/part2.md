@@ -1,13 +1,12 @@
-# Problem Set 1 --- Part II: Written Answers (Problems 11--21)
+# Problem Set 1 — Part II: Written Answers (Problems 11–21)
 
-------------------------------------------------------------------------
+---
 
-# Problem 11: SFT Objective and Its Limitations
+## Problem 11: SFT Objective and Its Limitations
 
 ### (a) SFT Objective
 
-In supervised fine-tuning (SFT), the model is trained to maximize the
-probability of a reference solution given a problem.
+In supervised fine-tuning (SFT), the model is trained to maximize the probability of a reference solution given a problem.
 
 $$
 \mathcal{L}_{SFT}(\theta) = -\mathbb{E}_{P \sim D}[\log \pi_\theta(Y_{ref}(P) \mid P)]
@@ -24,57 +23,43 @@ $$
 \right]
 $$
 
-This means the model is trained to predict the **next token of the
-reference solution** at every step.
+This means the model is trained to predict the **next token of the reference solution** at every step.
 
-------------------------------------------------------------------------
+---
 
 ### (b) When Can SFT Reduce Probability of Other Correct Solutions?
 
-SFT only increases the probability of **one reference solution** per
-problem.
+SFT only increases the probability of **one reference solution** per problem.
 
-Because probabilities must sum to 1, increasing the probability of the
-reference solution reduces probability elsewhere. If there are other
-correct solutions that look different (for example, recursion vs
-iteration or different algorithm choices), the model may assign them
-lower probability.
+Because probabilities must sum to 1, increasing the probability of the reference solution reduces probability elsewhere. If there are other correct solutions that look different (for example, recursion vs iteration or different algorithm choices), the model may assign them lower probability.
 
-This is common in code generation because many different implementations
-can be correct.
+This is common in code generation because many different implementations can be correct.
 
-------------------------------------------------------------------------
+---
 
-# Problem 12: Binary vs Fractional Reward
+## Problem 12: Binary vs Fractional Reward
 
 ### (a) What Does Fractional Reward Provide?
 
-Fractional reward $R_{fraction}=k/n$ gives **partial credit** when a
-solution passes some tests.
+Fractional reward $R_{fraction} = k/n$ gives **partial credit** when a solution passes some tests.
 
-This helps learning early in training. Even if the model fails the full
-problem, passing a few tests still provides a signal about what it did
-right.
+This helps learning early in training. Even if the model fails the full problem, passing a few tests still provides a signal about what it did right.
 
-Binary reward gives **0 unless all tests pass**, so the model receives
-no learning signal until it fully solves the problem.
+Binary reward gives **0 unless all tests pass**, so the model receives no learning signal until it fully solves the problem.
 
-------------------------------------------------------------------------
+---
 
 ### (b) Why Prefer Binary Reward?
 
-Binary reward matches how programming problems are evaluated in
-practice: a solution either passes all tests or it does not.
+Binary reward matches how programming problems are evaluated in practice: a solution either passes all tests or it does not.
 
-Fractional rewards may encourage shortcuts, such as solutions that pass
-simple cases but fail edge cases. Binary reward avoids this by rewarding
-only fully correct solutions.
+Fractional rewards may encourage shortcuts, such as solutions that pass simple cases but fail edge cases. Binary reward avoids this by rewarding only fully correct solutions.
 
-------------------------------------------------------------------------
+---
 
-# Problem 13: `complete(P)` Pseudocode
+## Problem 13: `complete(P)` Pseudocode
 
-``` text
+```text
 function complete(P):
 
     prompt = render_chat_template(
@@ -102,44 +87,41 @@ function complete(P):
     return decode(output)
 ```
 
-The non-max-token stopping condition here is detecting a **closing code
-fence (```` ``` ````)**.\
-Since the prompt instructs the model to output code in a code block,
-this signals the completion is finished.
+The non-max-token stopping condition here is detecting a **closing code fence (` ``` `)**.
+Since the prompt instructs the model to output code in a code block, this signals the completion is finished.
 
-------------------------------------------------------------------------
+---
 
-# Problem 14: Prompt Renderers
+## Problem 14: Prompt Renderers
 
 ### (a) What Goes Wrong With the Wrong Renderer?
 
 Different models expect different prompt formats. For example:
 
--   Llama uses `[INST] ... [/INST]`
--   Qwen uses `<|im_start|>`
+- Llama uses `[INST] ... [/INST]`
+- Qwen uses `<|im_start|>`
 
-If the wrong format is used, the model may not understand where the user
-message ends or where it should start responding.
+If the wrong format is used, the model may not understand where the user message ends or where it should start responding.
 
-------------------------------------------------------------------------
+---
 
 ### (b) Possible Symptom
 
 The model might:
 
--   repeat the prompt in its output\
--   print template tokens like `[INST]`\
--   generate short or irrelevant responses
+- repeat the prompt in its output
+- print template tokens like `[INST]`
+- generate short or irrelevant responses
 
 because it does not recognize the prompt structure.
 
-------------------------------------------------------------------------
+---
 
-# Problem 15: Code Extraction
+## Problem 15: Code Extraction
 
 ### (a) Deterministic Extraction Rule
 
-``` text
+```text
 function extract_code(response):
 
     matches = regex.findall("```python ... ```")
@@ -154,48 +136,40 @@ function extract_code(response):
         return the last one
 ```
 
-Returning the last code block is useful because models sometimes
-generate a first attempt and then correct themselves.
+Returning the last code block is useful because models sometimes generate a first attempt and then correct themselves.
 
-------------------------------------------------------------------------
+---
 
 ### (b) Why Extraction Is Part of the Environment
 
-Extraction directly affects reward. If correct code cannot be extracted,
-the model receives zero reward.
+Extraction directly affects reward. If correct code cannot be extracted, the model receives zero reward.
 
-Making extraction part of the environment ensures the rule is
-deterministic and consistent, so the reward signal is reliable.
+Making extraction part of the environment ensures the rule is deterministic and consistent, so the reward signal is reliable.
 
-------------------------------------------------------------------------
+---
 
-# Problem 16: Why `exec()` on the Host Is Unsafe
+## Problem 16: Why `exec()` on the Host Is Unsafe
 
 ### Accidental Failure
 
-A generated program might contain an infinite loop or heavy computation
-that freezes the training process.
+A generated program might contain an infinite loop or heavy computation that freezes the training process.
 
-Since thousands of programs are executed during training, even a few
-problematic ones could stall the pipeline.
-
-------------------------------------------------------------------------
+Since thousands of programs are executed during training, even a few problematic ones could stall the pipeline.
 
 ### Adversarial Failure
 
 A completion could contain commands such as:
 
-``` python
+```python
 import os
 os.system("rm -rf /")
 ```
 
-Running code directly on the host would allow the model to execute
-arbitrary commands. Using Docker or another sandbox prevents this.
+Running code directly on the host would allow the model to execute arbitrary commands. Using Docker or another sandbox prevents this.
 
-------------------------------------------------------------------------
+---
 
-# Problem 17: Shaped Reward
+## Problem 17: Shaped Reward
 
 Reward is defined as:
 
@@ -205,24 +179,21 @@ $$
 
 ### (a) Why Allow Negative Format Reward?
 
-If formatting is wrong, a small negative reward (e.g., −0.1) discourages
-malformed outputs even when the solution itself is incorrect.
+If formatting is wrong, a small negative reward (e.g., −0.1) discourages malformed outputs even when the solution itself is incorrect.
 
-Without this penalty, the model would not learn about formatting until
-it also solved the problem correctly.
+Without this penalty, the model would not learn about formatting until it also solved the problem correctly.
 
-------------------------------------------------------------------------
+---
 
 ### (b) Argument Against Format Reward
 
-Formatting is not the true objective --- passing tests is.
+Formatting is not the true objective — passing tests is.
 
-Adding a formatting reward introduces a hyperparameter and may encourage
-the model to produce nicely formatted but incorrect code.
+Adding a formatting reward introduces a hyperparameter and may encourage the model to produce nicely formatted but incorrect code.
 
 An alternative is to simply give zero reward when extraction fails.
 
-------------------------------------------------------------------------
+---
 
 ## Problem 18: Policy Gradient
 
@@ -247,9 +218,6 @@ $$
 \nabla_\theta
 \sum_y
 \pi_\theta(y \mid P) R(y)
-$$
-
-$$
 =
 \sum_y
 R(y)
@@ -266,7 +234,7 @@ $$
 \log \pi_\theta(y \mid P)
 $$
 
-Substituting this into the previous expression:
+Substituting:
 
 $$
 =
@@ -275,9 +243,6 @@ R(y)
 \pi_\theta(y \mid P)
 \nabla_\theta
 \log \pi_\theta(y \mid P)
-$$
-
-$$
 =
 \mathbb{E}\left[
 R(y)
@@ -288,7 +253,7 @@ $$
 
 ### Autoregressive factorization
 
-Because the model generates tokens sequentially,
+Because the model generates tokens sequentially:
 
 $$
 \log \pi_\theta(y \mid P)
@@ -298,7 +263,7 @@ $$
 \pi_\theta(y_t \mid P, y_{<t})
 $$
 
-Taking the gradient gives
+Taking the gradient:
 
 $$
 \nabla_\theta \log \pi_\theta(y \mid P)
@@ -310,8 +275,6 @@ $$
 $$
 
 ### Final result
-
-Substituting this back yields
 
 $$
 \nabla_\theta \mathbb{E}_{y \sim \pi_\theta}[R(y)]
@@ -326,43 +289,37 @@ R(y)
 \right]
 $$
 
-which gives the final result.
+---
 
-------------------------------------------------------------------------
-
-# Problem 19: Baseline and Advantage
+## Problem 19: Baseline and Advantage
 
 ### (a) Why Subtracting a Baseline Does Not Change the Expected Gradient
 
-If we replace $R(y)$ with $A(y)=R(y)-b(P)$,
-
-the extra term becomes:
+If we replace $R(y)$ with $A(y) = R(y) - b(P)$, the extra term becomes:
 
 $$
-b(P)E[\nabla_\theta \log \pi_\theta(y|P)]
+b(P) \cdot \mathbb{E}[\nabla_\theta \log \pi_\theta(y \mid P)]
 $$
 
-but
+But since:
 
 $$
-E[\nabla_\theta \log \pi_\theta(y|P)] = 0
+\mathbb{E}[\nabla_\theta \log \pi_\theta(y \mid P)] = 0
 $$
 
-so the expected gradient remains unchanged.
+the expected gradient remains unchanged.
 
-------------------------------------------------------------------------
+---
 
 ### (b) Why This Helps
 
 Subtracting a baseline reduces **variance**.
 
-Instead of reinforcing all sampled solutions equally, the model only
-reinforces solutions that perform **better than average**, which leads
-to more stable updates.
+Instead of reinforcing all sampled solutions equally, the model only reinforces solutions that perform **better than average**, which leads to more stable updates.
 
-------------------------------------------------------------------------
+---
 
-# Problem 20: GRPO Advantage
+## Problem 20: GRPO Advantage
 
 ### (a) Show That Advantages Sum to Zero
 
@@ -370,49 +327,36 @@ $$
 A_g = R_g - \bar{R}
 $$
 
-Summing:
+Summing over all groups:
 
 $$
 \sum_g A_g =
 \sum_g R_g - G\bar{R}
 $$
 
-Since
-
-$$
-\bar{R}=\frac{1}{G}\sum_g R_g
-$$
-
-the terms cancel, giving
+Since $\bar{R} = \frac{1}{G}\sum_g R_g$, the terms cancel, giving:
 
 $$
 \sum_g A_g = 0
 $$
 
-------------------------------------------------------------------------
+---
 
 ### (b) Interpretation
 
 The update depends only on **relative performance within the group**.
 
-Solutions better than the group average are reinforced, and worse ones
-are suppressed.
+Solutions better than the group average are reinforced, and worse ones are suppressed.
 
 If all rewards are equal, the update is zero.
 
-------------------------------------------------------------------------
+---
 
-# Problem 21: Degenerate Groups
+## Problem 21: Degenerate Groups
 
 ### (a) When All Rewards Are Equal
 
-If all rewards are the same value $c$, then
-
-$$
-\bar{R}=c
-$$
-
-so
+If all rewards are the same value $c$, then $\bar{R} = c$, so:
 
 $$
 A_g = 0
@@ -420,18 +364,14 @@ $$
 
 for every sample.
 
-------------------------------------------------------------------------
+---
 
 ### (b) Implication
 
-With zero advantages, the gradient update is zero and no learning
-occurs.
+With zero advantages, the gradient update is zero and no learning occurs.
 
-This is expected because the model receives no information about which
-solutions are better.
+This is expected because the model receives no information about which solutions are better.
 
-In practice these groups should be skipped, which is why the
-implementation checks for this case.
-
+In practice these groups should be skipped, which is why the implementation checks for this case.
 
 i used claude to help format
